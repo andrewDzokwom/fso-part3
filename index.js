@@ -45,10 +45,18 @@ app.get("/info", (req, res)=>{
     const timeNow = new Date()
     res.send(`<p>${text}</p><p>${timeNow}</p>`)
 })
+app.get("/api/persons/:id", (req, res)=>{
+    const personId = req.params.id
+    const person = persons.find(person => person.id === personId)
+    if (person){
+        res.send(person)
+        return
+    }
+    res.status(404).end()
+})
 
 app.listen(PORT, ()=>{
     console.log("This is a confirmation  it is running!")
 })
 
-console.log("Server is running")
 
