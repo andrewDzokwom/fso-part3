@@ -1,5 +1,4 @@
 const express = require("express")
-const { get } = require("http")
 
 const app = express()
 const PORT = 3001
@@ -49,10 +48,19 @@ app.get("/api/persons/:id", (req, res)=>{
     const personId = req.params.id
     const person = persons.find(person => person.id === personId)
     if (person){
-        res.send(person)
-        return
+        res.json(person)
     }
     res.status(404).end()
+})
+
+app.delete("/api/persons/:id", (req, res)=>{
+    const personId = req.params.id
+    const personToDelete = persons.find(person => person.id === personId)
+    if (!personToDelete){
+        res.status(404).end()
+    }
+    persons = persons.filter(person => person.id !== personId)
+    res.status(204).end()
 })
 
 app.listen(PORT, ()=>{
