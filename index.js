@@ -3,6 +3,8 @@ const express = require("express")
 const app = express()
 const PORT = 3001
 
+app.use(express.json())
+
 let persons = [
     { 
       "id": "1",
@@ -63,8 +65,37 @@ app.delete("/api/persons/:id", (req, res)=>{
     res.status(204).end()
 })
 
+function generateId(){
+    const generatedId = Math.floor(Math.random()*100)
+    if (!(persons.find(person => person.id === String(generatedId)))){
+        return generatedId
+    }
+    generateId()
+}
+
+app.post("/api/persons", (req, res)=> {
+    const body= req.body
+    
+    if (!body.name || !body.number){
+        const errorMessage = {
+            error: "Name or number is empty"
+        }
+        res.status(400).json(errorMessage)
+    }else if(persons.find(person => person.name === body.name)){
+        const errorMessage = {
+            error: "Name already exists"
+        }
+        res.status(400).json(errorMessage)
+    }else{
+        const  person = body
+        person.id = String(generateId())
+        persons = persons.concat(person)
+        res.json(person)
+    }
+})
+
 app.listen(PORT, ()=>{
-    console.log("This is a confirmation  it is running!")
+    console.log(`Server is running on address http://localhost:${PORT}`)
 })
 
 
