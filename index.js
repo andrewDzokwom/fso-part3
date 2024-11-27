@@ -1,4 +1,5 @@
 const express = require("express")
+const morgan  = require("morgan")
 
 const app = express()
 const PORT = 3001
@@ -73,9 +74,18 @@ function generateId(){
     generateId()
 }
 
+app.use(morgan(function (tokens, req, res) {
+    return [
+      tokens.method(req, res),
+      tokens.url(req, res),
+      tokens.status(req, res),
+      tokens.res(req, res, 'content-length'), '-',
+      tokens['response-time'](req, res), 'ms',
+      JSON.stringify(req.body)
+    ].join(' ')
+  }))
 
-
-app.post("/api/persons", (req, res)=> {
+app.post("/api/persons",  (req, res)=> {
     const body= req.body
     
     if (!body.name || !body.number){
