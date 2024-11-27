@@ -73,17 +73,19 @@ function generateId(){
     generateId()
 }
 
+
+
 app.post("/api/persons", (req, res)=> {
     const body= req.body
     
     if (!body.name || !body.number){
         const errorMessage = {
-            error: "Name or number is empty"
+            error: "name or number is empty"
         }
         res.status(400).json(errorMessage)
     }else if(persons.find(person => person.name === body.name)){
         const errorMessage = {
-            error: "Name already exists"
+            error: "name mus be unique"
         }
         res.status(400).json(errorMessage)
     }else{
