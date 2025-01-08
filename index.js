@@ -3,7 +3,7 @@ const morgan  = require("morgan")
 const cors = require("cors")
 
 const app = express()
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3000
 
 app.use(cors())
 app.use(express.json())
@@ -97,12 +97,15 @@ app.post("/api/persons",  (req, res)=> {
         res.status(400).json(errorMessage)
     }else if(persons.find(person => person.name === body.name)){
         const errorMessage = {
-            error: "name mus be unique"
+            error: "name must be unique"
         }
         res.status(400).json(errorMessage)
     }else{
-        const  person = body
-        person.id = String(generateId())
+        const  person = {
+            id: String(generateId()),
+            name: body.name,
+            number: body.number
+        }
         persons = persons.concat(person)
         res.json(person)
     }
