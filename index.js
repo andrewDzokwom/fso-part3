@@ -27,6 +27,26 @@ app.get("/api/persons", (req, res) =>{
     })
 })
 
+//get one contact 
+app.get("/api/persons/:id", (req, res)=>{
+    Person.findById(req.params.id)
+        .then(person => {
+            if (person){
+                return res.json(person)
+            }
+            res.status(404).json({
+                error: "person not found / could have also used end() method without a message."
+            })
+            
+        })
+        .catch(error =>{
+            console.log(error)
+            res.status(500).json({
+                error: "servre is down/unable to reach"
+            })
+        })
+})
+
 // add contact to the list
 app.post("/api/persons",  (req, res)=> {
     const {name, number}= req.body
@@ -79,38 +99,42 @@ async function getTotalPersons(){
 }
 
 app.get("/info", (req, res)=>{
-    const totalPersons = getTotalPersons()
-    const text = `Phonebook has info for ${totalPersons} ${totalPersons> 1 ? "people": "person"}.`
-    const timeNow = new Date()
-    res.send(`<p>${text}</p><p>${timeNow}</p>`)
-})
-app.get("/api/persons/:id", (req, res)=>{
-    Person.findById(req.params.id)
-        .then(person => {
-            if (person){
-                res.json(person)
-            }else{
-                res.status(404).json({
-                    error: "person not found / could have also used end() method without a message."
-                })
-            }
+
+    Person.find({})
+        .then(persons => {
+            const totalPersons = persons.length
+            const text = `Phonebook has info for ${totalPersons} ${totalPersons> 1 ? "people": "person"}.`
+            const timeNow = new Date()
+            res.send(`<p>${text}</p><p>${timeNow}</p>`)
         })
         .catch(error =>{
             console.log(error)
-            res.status(404).json({
-                error: "malformatted id"
+            res.status(500).json({
+                error: "servre is down/unable to reach"
             })
         })
 })
 
+
+
 app.delete("/api/persons/:id", (req, res)=>{
-    const personId = req.params.id
-    const personToDelete = persons.find(person => person.id === personId)
-    if (!personToDelete){
-        res.status(404).end()
-    }
-    persons = persons.filter(person => person.id !== personId)
-    res.status(204).end()
+    
+    Person.findByIdAndDelete(req.params.id)
+        .then(() => {
+        res.status(204).json({
+            message: "person deleted"
+        })
+    })
+    .catch(error =>{
+        console.log(error)
+        res.status(500).send("Deleted")
+    })
+    // const personToDelete = persons.find(person => person.id === personId)
+    // if (!personToDelete){
+    //     res.status(404).end()
+    // }
+    // persons = persons.filter(person => person.id !== personId)
+    // res.status(204).end()
 })
 
 function generateId(){
