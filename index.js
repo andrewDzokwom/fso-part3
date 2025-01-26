@@ -123,6 +123,13 @@ app.put("./api/persons/:id", (req, res)=>{
     const {name, number} = req.body
     const person = {name, number}
     Person.findByIdAndUpdate(req.params.id, person, {new: true})
+        .then(updatedPerson =>{
+            if(!updatedPerson){
+                res.status(404).end()
+            }
+            res.json(updatedPerson)
+        })
+        .catch(error => next(error))
 })
 
 
