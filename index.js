@@ -43,25 +43,6 @@ const unknownEndpoint = (request, response) => {
 }
 
 
- 
-// info 
-app.get("/info", (req, res)=>{
-
-    Person.find({})
-        .then(persons => {
-            const totalPersons = persons.length
-            const text = `Phonebook has info for ${persons.length} ${totalPersons> 1 ? "people": "person"}.`
-            const timeNow = new Date()
-            res.send(`<div><p>${text}</p><p>${timeNow}</p></div>`)
-        })
-        .catch(error =>{
-            console.log(error)
-            res.status(500).json({
-                error: "servre is down/unable to reach"
-            })
-        })
-})
-
 // get list of contacts 
 app.get("/api/persons", (req, res) =>{
     Person.find({}).then(persons => {
@@ -88,9 +69,7 @@ app.get("/api/persons/:id", (req, res)=>{
         })
         .catch(error =>{
             console.log(error)
-            res.status(500).json({
-                error: "servre is down/unable to reach"
-            })
+            next(error)
         })
 })
 
@@ -139,7 +118,12 @@ app.post("/api/persons",  (req, res)=> {
         })
 })
 
-
+// handle updating contact
+app.put("./api/persons/:id", (req, res)=>{
+    const {name, number} = req.body
+    const person = {name, number}
+    Person.findByIdAndUpdate(req.params.id, person, {new: true})
+})
 
 
 
@@ -155,6 +139,24 @@ app.delete("/api/persons/:id", (req, res)=>{
         .catch(error =>{
             console.log(error)
             next(error)
+        })
+})
+
+// info 
+app.get("/info", (req, res)=>{
+
+    Person.find({})
+        .then(persons => {
+            const totalPersons = persons.length
+            const text = `Phonebook has info for ${persons.length} ${totalPersons> 1 ? "people": "person"}.`
+            const timeNow = new Date()
+            res.send(`<div><p>${text}</p><p>${timeNow}</p></div>`)
+        })
+        .catch(error =>{
+            console.log(error)
+            res.status(500).json({
+                error: "servre is down/unable to reach"
+            })
         })
 })
 
