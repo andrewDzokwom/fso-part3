@@ -10,11 +10,58 @@ const PORT = process.env.PORT || 3000
 app.use(express.static('dist'))
 app.use(cors())
 app.use(express.json())
+app.use(morgan(function (tokens, req, res) {
+    return [
+      tokens.method(req, res),
+      tokens.url(req, res),
+      tokens.status(req, res),
+      tokens.res(req, res, 'content-length'), '-',
+      tokens['response-time'](req, res), 'ms',
+      JSON.stringify(req.body)
+    ].join(' ')
+  }))
 
-app.get("/", (req, res)=>{
-    res.send("<h1>This is the HomePage</h1>")
-})
+
+  // function to handle error 
+const errorHandler = (error, req, res, next) => {
+    console.error('error.name:', error.name)
+    console.log("error.message:", error.message)
+    if (error.name === 'CastError'){
+        return res.status(404).json({
+            error: "mal formatted id"
+        })
+    }else if(error.name === 'ValidatorError'){
+        return res.status(404).json({
+            error: error.message
+        })
+    }
+}
+
+// handler for unknown endpoints
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
+}
+
+
  
+// info 
+app.get("/info", (req, res)=>{
+
+    Person.find({})
+        .then(persons => {
+            const totalPersons = persons.length
+            const text = `Phonebook has info for ${persons.length} ${totalPersons> 1 ? "people": "person"}.`
+            const timeNow = new Date()
+            res.send(`<div><p>${text}</p><p>${timeNow}</p></div>`)
+        })
+        .catch(error =>{
+            console.log(error)
+            res.status(500).json({
+                error: "servre is down/unable to reach"
+            })
+        })
+})
+
 // get list of contacts 
 app.get("/api/persons", (req, res) =>{
     Person.find({}).then(persons => {
@@ -73,47 +120,27 @@ app.post("/api/persons",  (req, res)=> {
     Person.find({name})
         .then(returnedPerson => {
 
-        const isEmpty = returnedPerson.length === 0
-        if (!isEmpty){
-            const errorMessage = {
-                error: "name must be unique"
+            const isEmpty = returnedPerson.length === 0
+            if (!isEmpty){
+                const errorMessage = {
+                    error: "name must be unique"
+                }
+                res.status(400).json(errorMessage)
+            }else{
+                const  newPerson = new Person({ name, number})
+                newPerson.save().then(savedPerson =>{
+                    res.json(savedPerson)
+                })
             }
-            res.status(400).json(errorMessage)
-        }else{
-            const  newPerson = new Person({ name, number})
-            newPerson.save().then(savedPerson =>{
-                res.json(savedPerson)
-            })
-            
-        }
-    }).catch(error => {
-        console.log(error)
-        res.status(400).json({
-            error: "unable to reach "
         })
-    })
-
-async function getTotalPersons(){
-    const persons  = await Person.find({}).then(persons => persons)
-    return await persons.length
-}
-
-app.get("/info", (req, res)=>{
-
-    Person.find({})
-        .then(persons => {
-            const totalPersons = persons.length
-            const text = `Phonebook has info for ${totalPersons} ${totalPersons> 1 ? "people": "person"}.`
-            const timeNow = new Date()
-            res.send(`<p>${text}</p><p>${timeNow}</p>`)
-        })
-        .catch(error =>{
+        .catch(error => {
             console.log(error)
-            res.status(500).json({
-                error: "servre is down/unable to reach"
-            })
+            next(error)
         })
 })
+
+
+
 
 
 
@@ -124,61 +151,19 @@ app.delete("/api/persons/:id", (req, res)=>{
         res.status(204).json({
             message: "person deleted"
         })
-    })
-    .catch(error =>{
-        console.log(error)
-        res.status(500).send("Deleted")
-    })
-    // const personToDelete = persons.find(person => person.id === personId)
-    // if (!personToDelete){
-    //     res.status(404).end()
-    // }
-    // persons = persons.filter(person => person.id !== personId)
-    // res.status(204).end()
+        })
+        .catch(error =>{
+            console.log(error)
+            next(error)
+        })
 })
 
-function generateId(){
-    const generatedId = Math.floor(Math.random()*100)
-    if (!(persons.find(person => person.id === String(generatedId)))){
-        return generatedId
-    }
-    generateId()
-}
-
-app.use(morgan(function (tokens, req, res) {
-    return [
-      tokens.method(req, res),
-      tokens.url(req, res),
-      tokens.status(req, res),
-      tokens.res(req, res, 'content-length'), '-',
-      tokens['response-time'](req, res), 'ms',
-      JSON.stringify(req.body)
-    ].join(' ')
-  }))
+app.use(unknownEndpoint)
+app.use(errorHandler)
 
 
-    
-    // if (!body.name.trim() || !body.number.trim()){
-    //     const errorMessage = {
-    //         error: "name or number is empty"
-    //     }
-    //     res.status(400).json(errorMessage)
-    // }else if(Person.find({name: body.name}.then(person => person.length > 0))){
-    //     const errorMessage = {
-    //         error: "name must be unique"
-    //     }
-    //     res.status(400).json(errorMessage)
-    // }else{
-    //     const  person = new Person({
-    //         name: body.name,
-    //         number: body.number
-    //     })
-        
-    //     person.save().then(savedPerson =>{
-    //         res.json(person)
-    //     })
-    // }
-})
+
+
 
 app.listen(PORT, ()=>{
     console.log(`Server is running on address http://localhost:${PORT}`)
