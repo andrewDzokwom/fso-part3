@@ -12,9 +12,25 @@ mongoose.connect(url)
         console.log('failed to connect to database', error.message)
     })
 
+const isValidPhoneNumber = (phoneNumber) => {
+    var pattern = /^\d{2,3}-\d+$/
+    return pattern.test(phoneNumber)
+}
+      
+
 const personSchema = new mongoose.Schema({
-    name: String,
-    number: String,
+    name: {
+        type: String,
+        minLength: [3, 'Too short name'],
+        required: true,
+        unique: true,
+      },
+    number: {
+        type: String,
+        minLength: [8, 'Too short number'],
+        required: true,
+        validate: [isValidPhoneNumber, 'Not a valid phone number'],
+      },
 })
 
 personSchema.set('toJSON', {
