@@ -74,7 +74,7 @@ app.get('/api/persons/:id', (req, res, next) => {
 })
 
 // add contact to the list
-app.post('/api/persons',  (req, res) => {
+app.post('/api/persons',  (req, res, next) => {
   const { name, number }= req.body
   // check if name and number are both empty
   if (!name.trim() && !number.trim()){
@@ -106,7 +106,7 @@ app.post('/api/persons',  (req, res) => {
         const  newPerson = new Person({ name, number })
         newPerson.save().then(savedPerson => {
           return res.json(savedPerson)
-        })
+        }).catch(error => next(error))
       }
     })
     .catch(error => {
